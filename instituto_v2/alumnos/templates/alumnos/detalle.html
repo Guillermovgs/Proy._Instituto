@@ -1,0 +1,129 @@
+{% extends 'alumnos/base.html' %}
+
+{% block title %}{{ alumno.nombre_completo }} · ISDEM{% endblock %}
+
+{% block contenido %}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">👤 Detalle del alumno</h1>
+        <p class="page-subtitle">Legajo {{ alumno.legajo }}</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'alumnos:editar' alumno.legajo %}" class="btn btn-warning">✏ Editar</a>
+        <a href="{% url 'alumnos:baja'   alumno.legajo %}" class="btn btn-danger">🗑 Eliminar</a>
+        <a href="{% url 'alumnos:lista' %}" class="btn btn-secondary">← Volver al listado</a>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">Nombre completo</span>
+            <span class="detail-value">{{ alumno.apellido }}, {{ alumno.nombre }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Legajo</span>
+            <span class="detail-value">{{ alumno.legajo }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Correo electrónico</span>
+            <span class="detail-value"><a href="mailto:{{ alumno.email }}">{{ alumno.email }}</a></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Estado</span>
+            <span class="detail-value">
+                {% if alumno.activo %}
+                    <span class="badge badge-activo">✅ Activo</span>
+                {% else %}
+                    <span class="badge badge-inactivo">❌ Inactivo</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Fecha de alta</span>
+            <span class="detail-value">{{ alumno.fecha_alta|date:"d \d\e F \d\e Y" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Hora de alta</span>
+            <span class="detail-value">{{ alumno.fecha_alta|date:"H:i" }} hs</span>
+        </div>
+    </div>
+</div>
+
+<div class="callout-api">
+    <span>🔌 También disponible vía API:</span>
+    <a href="/api/alumnos/{{ alumno.legajo }}/" target="_blank">/api/alumnos/{{ alumno.legajo }}/</a>
+</div>
+
+<hr>
+<div class="row mt-4">
+    <!--Formulario para cargar asistencia -->
+    <div class="col-md-5">
+        <h3>Registrar Asistencia</h3>
+        <form method="POST" class="card card-body shadow-sm">
+            {% csrf_token %} <!--medida de seguridad contra ataques Cross-Site-->
+            
+            <div class="mb-3">
+                <label for="fecha" class="form-label">Fecha:</label>
+                <input type="date" id="fecha" name="fecha" value="{{ hoy|date:'Y-m-d' }}" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="estado" class="form-label">Estado:</label>
+                <select id="estado" name="estado" class="form-select" required>
+                    <option value="PRESENTE">Presente</option>
+                    <option value="AUSENTE">Ausente</option>
+                    <option value="TARDANZA">Tardanza</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="observaciones" class="form-label">Observaciones (Opcional):</label>
+                <textarea id="observaciones" name="observaciones" rows="2" class="form-control"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Guardar Asistencia</button>
+        </form>
+    </div>
+
+    <!--Historial de asistencias -->
+    <div class="col-md-7">
+        <h3>Historial de Asistencias</h3>
+        {% if asistencias %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asistencia in asistencias %}
+                            <tr>
+                                <td>{{ asistencia.fecha|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if asistencia.estado == 'PRESENTE' %}
+                                        <span class="badge bg-success">Presente</span>
+                                    {% elif asistencia.estado == 'AUSENTE' %}
+                                        <span class="badge bg-danger">Ausente</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Tardanza</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ asistencia.observaciones|default:"-" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">Este alumno aún no registra asistencias.</p>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}
